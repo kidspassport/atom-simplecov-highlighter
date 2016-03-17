@@ -1,0 +1,18 @@
+{
+  "name": "simplecov-highlighter",
+  "main": "./lib/simplecov-highlighter",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "keywords": [
+  ],
+  "activationCommands": {
+    "atom-workspace": "simplecov-highlighter:toggle"
+  },
+  "repository": "https://github.com/noodlechump/simplecov-highlighter",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+  }
+}

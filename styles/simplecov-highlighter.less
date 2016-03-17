@@ -1,0 +1,35 @@
+// The ui-variables file is provided by base themes provided by Atom.
+//
+// See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
+// for a full listing of what's available.
+@import "ui-variables";
+
+.simplecov-highlighter-status {
+  display: block;
+  font-size: 11px;
+  line-height: @component-line-height - 3px;
+  height: @component-line-height + 1px;
+  position: relative;
+  overflow: hidden;
+  min-width: -webkit-min-content;
+
+  padding: 0 @component-line-height/2;
+  .green {
+    color: rgba(166, 226, 46, 1);
+  }
+  .red {
+    color: rgba(249, 38, 114, 1);
+  }
+  .yellow {
+    color: rgba(253, 151, 31, 1);
+  }
+}
+
+.atom-text-editor, :host, atom-text-editor, atom-text-editor::shadow {
+  .line.coverage-hit {
+    background: rgba(166, 226, 46, 0.12);
+  }
+  .line.coverage-missed {
+    background: rgba(249, 38, 114, 0.15);
+  }
+}
