@@ -33,8 +33,8 @@ module.exports = SimplecovHighlighter =
 
   toggle: ->
     if @showingCoverage
-      decoration.destroy() for decoration in @decorations
-      @decorations = []
+      marker.destroy() for marker in @coverageMarkers
+      @coverageMarkers = []
       @coveragePanel.hide()
     else
       @markAndDecorateEditor(@coverageObject)
