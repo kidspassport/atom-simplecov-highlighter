@@ -3,13 +3,9 @@ SimplecovHighlighterView = require './simplecov-highlighter-view'
 
 module.exports = SimplecovHighlighter =
   simplecovHighlighterView: null
-  modalPanel: null
   subscriptions: null
 
   activate: (state) ->
-    @simplecovHighlighterView = new SimplecovHighlighterView(state.simplecovHighlighterViewState)
-    #@modalPanel = atom.workspace.addModalPanel(item: @simplecovHighlighterView.getElement(), visible: false)
-
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
@@ -17,16 +13,18 @@ module.exports = SimplecovHighlighter =
     @subscriptions.add atom.commands.add 'atom-workspace', 'simplecov-highlighter:toggle': => @toggle()
 
     # Own stuff
+    @coverageObject = null
     @coverageMarkers = []
-    @coverageData = {}
     @showingCoverage
     @decorations = []
+    @coverageFilePaths = []
 
-    atom.workspace.observeTextEditors(@.loadAndProcessCoverageForEditor.bind(@))
+    @simplecovHighlighterView = new SimplecovHighlighterView(state.simplecovHighlighterViewState)
     @coveragePanel = atom.workspace.addBottomPanel(item: @simplecovHighlighterView.getElement(), visible: true)
 
+    atom.workspace.observeActivePaneItem(@loadAndProcessCoverage.bind(@))
+
   deactivate: ->
-    @modalPanel.destroy()
     @subscriptions.dispose()
     @simplecovHighlighterView.destroy()
 
@@ -39,78 +37,68 @@ module.exports = SimplecovHighlighter =
       @decorations = []
       @coveragePanel.hide()
     else
-      @.decorateEditorMarkers(editor) for editor in atom.workspace.getTextEditors()
+      @markAndDecorateEditor(@coverageObject)
       @coveragePanel.show()
-    @showingCoverage = not @showingCoverage
+    @showingCoverage = !@showingCoverage
 
-  loadAndProcessCoverageForEditor: (editor) ->
-    @editor = editor
-    openDirectories = atom.project.getDirectories()
-    currentFilePath = editor.getPath()
-    console.log(currentFilePath)
-    currentProjectDirectory = dir for dir in openDirectories when currentFilePath.match(dir.getPath())
+  loadAndProcessCoverage: (item) ->
+    for currentProjectDirectory in atom.project.getDirectories()
+      coverageDirectory = currentProjectDirectory.getSubdirectory('coverage')
+      if coverageDirectory.existsSync()
+        fs = require 'fs'
+        coverageFilePath = coverageDirectory.getPath() + '/.resultset.json'
 
-    return if currentProjectDirectory == undefined
+        fs.readFile (coverageFilePath), @parseAndProcessCoverage.bind(@)
 
-    coverageDirectory = currentProjectDirectory.getSubdirectory('coverage')
-    if coverageDirectory.existsSync()
-      fs = require 'fs'
-      fs.readFile (coverageDirectory.getPath() + '/.resultset.json'), @.parseAndProcessCoverage.bind(@)
+        if coverageFilePath not in @coverageFilePaths
+          @coverageFilePaths.push coverageFilePath
+          that = @
+          fs.watch(coverageFilePath, @loadAndProcessCoverage.bind(@))
 
   parseAndProcessCoverage: (err, data) ->
-    coverageObject = JSON.parse(data)
-    editorMarkers = @.processEditorCoverage(@editor, coverageObject)
-    @coverageData[@editor.getPath()] = editorMarkers
-    @.decorateEditorMarkers(editor) for editor in atom.workspace.getTextEditors() if @showingCoverage
+    @coverageObject = JSON.parse(data)
+    @markAndDecorateEditor(@coverageObject, atom.workspace.getActiveTextEditor()) if @showingCoverage
 
-  processEditorCoverage: (editor, coverageObject) ->
-    editorPath = editor.getPath()
-    directoryCoverage = coverageObject.RSpec.coverage
-    directoryLineCoverage = directoryCoverage[editorPath]
+  markAndDecorateEditor: (coverageObject) ->
+    editor = atom.workspace.getActiveTextEditor()
 
-    return if directoryLineCoverage == null || directoryLineCoverage == undefined
+    if coverageObject == null
+      #no coverage dir
+      @simplecovHighlighterView.showNoCoverageData()
+      return
 
-    editorMarkers = []
+    lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
+
+    if lineCoverage == null || lineCoverage == undefined
+      # no coverage for file
+      @simplecovHighlighterView.showNoCoverageData()
+      return
+
+    [hitMarkers, missedMarkers] = @markEditor(lineCoverage, editor)
+
+    editor.decorateMarker(marker, type: 'line', class: "coverage-hit") for marker in hitMarkers
+    editor.decorateMarker(marker, type: 'line', class: "coverage-missed") for marker in missedMarkers
+
+    marker.destroy() for marker in @coverageMarkers
+    @coverageMarkers = []
+    #destroy old and push new markers
+    @coverageMarkers.push marker for marker in hitMarkers
+    @coverageMarkers.push marker for marker in missedMarkers
+
+    @simplecovHighlighterView.showCoverageInfo(lineCoverage)
+
+  markEditor: (lineCoverage, editor) ->
+    hitMarkers = []
+    missedMarkers = []
 
     line = 0
-    for lineHits in directoryLineCoverage
+    for lineHits in lineCoverage
       range = [[line, 0], [line, 1]]
-      editorMarkers.push [editor.markBufferRange(range), lineHits]
+      if lineHits != null
+        if lineHits == 0
+          missedMarkers.push editor.markBufferRange(range)
+        else
+          hitMarkers.push editor.markBufferRange(range)
       line += 1
 
-    return editorMarkers
-
-  decorateEditorMarkers: (editor) ->
-    editorCoverageData = @coverageData[editor.getPath()]
-
-    if editorCoverageData != undefined
-      for [marker, lineHits] in editorCoverageData
-        console.log marker
-        console.log lineHits
-
-        if lineHits != null
-          if lineHits > 0
-            decoration = editor.decorateMarker(marker, type: 'line', class: "coverage-hit")
-          else
-            decoration = editor.decorateMarker(marker, type: 'line', class: "coverage-missed")
-          @decorations.push decoration
-
-  showMessage: (message) ->
-    messageContainer = document.createElement('div')
-    messageContainer.textContent = message
-    messagePanel = atom.workspace.addModalPanel(item: messageContainer, visible: false)
-    messagePanel.show()
-    setTimeout (-> messagePanel.destroy()), 2000
-
-  coverageInfoContext: ->
-    editor = atom.workspace.getActiveTextEditor()
-    editorCoverageData = @coverageData[editor.getPath()]
-
-    coverageInfo = document.createElement('div')
-
-    if editorCoverageData != undefined
-      coverageInfo.textContent = "Coverage showing"
-    else
-      coverageInfo.textContent = "No coverage data found for current file."
-
-    return coverageInfo
+    return [hitMarkers, missedMarkers]

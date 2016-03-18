@@ -2,7 +2,7 @@
   "name": "simplecov-highlighter",
   "main": "./lib/simplecov-highlighter",
   "version": "0.0.0",
-  "description": "A short description of your package",
+  "description": "An atom package for displaying simplecov output.",
   "keywords": [
   ],
   "activationCommands": {
