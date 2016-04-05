@@ -48,7 +48,7 @@ module.exports = SimplecovHighlighter =
         fs = require 'fs'
         coverageFilePath = coverageDirectory.getPath() + '/.resultset.json'
 
-        fs.readFile (coverageFilePath), @parseAndProcessCoverage.bind(@)
+        fs.readFile(coverageFilePath, @parseAndProcessCoverage.bind(@))
 
         if coverageFilePath not in @coverageFilePaths
           @coverageFilePaths.push coverageFilePath
@@ -62,7 +62,7 @@ module.exports = SimplecovHighlighter =
   markAndDecorateEditor: (coverageObject) ->
     editor = atom.workspace.getActiveTextEditor()
 
-    if coverageObject == null
+    if coverageObject == null || editor == undefined
       #no coverage dir
       @simplecovHighlighterView.showNoCoverageData()
       return
