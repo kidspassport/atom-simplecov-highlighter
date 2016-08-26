@@ -62,14 +62,14 @@ module.exports = SimplecovHighlighter =
   markAndDecorateEditor: (coverageObject) ->
     editor = atom.workspace.getActiveTextEditor()
 
-    if coverageObject == null || editor == undefined
+    if coverageObject == null || coverageObject.RSpec == null || editor == null
       #no coverage dir
       @simplecovHighlighterView.showNoCoverageData()
       return
 
     lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
 
-    if lineCoverage == null || lineCoverage == undefined
+    if lineCoverage == null
       # no coverage for file
       @simplecovHighlighterView.showNoCoverageData()
       return
