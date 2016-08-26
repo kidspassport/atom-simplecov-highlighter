@@ -66,25 +66,20 @@ module.exports = SimplecovHighlighter =
       lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
     catch error
       @simplecovHighlighterView.showNoCoverageData()
-      return
 
-    if lineCoverage == null
-      # no coverage for file
-      @simplecovHighlighterView.showNoCoverageData()
-      return
+    if lineCoverage
+      [hitMarkers, missedMarkers] = @markEditor(lineCoverage, editor)
 
-    [hitMarkers, missedMarkers] = @markEditor(lineCoverage, editor)
+      editor.decorateMarker(marker, type: 'line', class: "coverage-hit") for marker in hitMarkers
+      editor.decorateMarker(marker, type: 'line', class: "coverage-missed") for marker in missedMarkers
 
-    editor.decorateMarker(marker, type: 'line', class: "coverage-hit") for marker in hitMarkers
-    editor.decorateMarker(marker, type: 'line', class: "coverage-missed") for marker in missedMarkers
+      marker.destroy() for marker in @coverageMarkers
+      @coverageMarkers = []
+      #destroy old and push new markers
+      @coverageMarkers.push marker for marker in hitMarkers
+      @coverageMarkers.push marker for marker in missedMarkers
 
-    marker.destroy() for marker in @coverageMarkers
-    @coverageMarkers = []
-    #destroy old and push new markers
-    @coverageMarkers.push marker for marker in hitMarkers
-    @coverageMarkers.push marker for marker in missedMarkers
-
-    @simplecovHighlighterView.showCoverageInfo(lineCoverage)
+      @simplecovHighlighterView.showCoverageInfo(lineCoverage)
 
   markEditor: (lineCoverage, editor) ->
     hitMarkers = []
