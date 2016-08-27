@@ -1,4 +1,4 @@
-# simplecov-highlighter package
+# Atom SimpleCov Highlighter
 
 See your simplecov output displayed in atom!
 
