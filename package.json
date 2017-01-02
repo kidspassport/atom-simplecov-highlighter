@@ -1,5 +1,5 @@
 {
-  "name": "simplecov-highlighter",
+  "name": "sawyer-simplecov-highlighter",
   "main": "./lib/simplecov-highlighter",
   "version": "0.4.0",
   "description": "An atom package for displaying simplecov output.",
@@ -7,7 +7,7 @@
   "activationCommands": {
     "atom-workspace": "simplecov-highlighter:toggle"
   },
-  "repository": "https://github.com/noodlechump/simplecov-highlighter",
+  "repository": "https://github.com/kidspassport/simplecov-highlighter",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
