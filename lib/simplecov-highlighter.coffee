@@ -57,7 +57,7 @@ module.exports = SimplecovHighlighter =
 
   loadAndProcessCoverage: (item) ->
     for currentProjectDirectory in atom.project.getDirectories()
-      coverageDirectory = currentProjectDirectory.getSubdirectory(atom.config.get('simplecov-highlighter.coveragePath'))
+      coverageDirectory = currentProjectDirectory.getSubdirectory(atom.config.get('sawyer-simplecov-highlighter.coveragePath'))
 
       if coverageDirectory.existsSync()
         fs = require 'fs'
@@ -82,7 +82,14 @@ module.exports = SimplecovHighlighter =
     editor = atom.workspace.getActiveTextEditor()
 
     try
-      if atom.config.get('simplecov-highlighter.vagrant') == true
+
+      if coverageObject.source_files != undefined
+        codeClimateCov = {}
+        for file in coverageObject.source_files
+          codeClimateCov['/vagrant/'+file.name] = JSON.parse(file.coverage)
+        coverageObject = {RSpec: {coverage: codeClimateCov}}
+
+      if atom.config.get('sawyer-simplecov-highlighter.vagrant') == true
         lineCoverage = coverageObject.RSpec.coverage[editor.getPath().replace(atom.project.getPaths()[0],'/vagrant')]
       else
         lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
@@ -132,5 +139,5 @@ MergeRecursive = (obj1, obj2) ->
     catch e
       # Property in destination object not set; create it and set its value.
       obj1[p] = obj2[p]
-  debugger;
+  #debugger;
   obj1
