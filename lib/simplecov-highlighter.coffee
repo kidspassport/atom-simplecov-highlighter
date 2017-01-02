@@ -5,6 +5,21 @@ module.exports = SimplecovHighlighter =
   simplecovHighlighterView: null
   subscriptions: null
 
+  config: {
+    coveragePath: {
+      type: 'string',
+      title: 'coverage path',
+      description: 'Specific the coverage Path',
+      default: 'coverage'
+    },
+    vagrant: {
+      type: 'boolean',
+      title: 'Is on Vagrant?',
+      description: 'Replaces json path with vagrant root'
+      default: true
+    }
+  },
+
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -42,7 +57,7 @@ module.exports = SimplecovHighlighter =
 
   loadAndProcessCoverage: (item) ->
     for currentProjectDirectory in atom.project.getDirectories()
-      coverageDirectory = currentProjectDirectory.getSubdirectory('coverage')
+      coverageDirectory = currentProjectDirectory.getSubdirectory(atom.config.get('simplecov-highlighter.coveragePath'))
 
       if coverageDirectory.existsSync()
         fs = require 'fs'
@@ -67,7 +82,11 @@ module.exports = SimplecovHighlighter =
     editor = atom.workspace.getActiveTextEditor()
 
     try
-      lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
+      if atom.config.get('simplecov-highlighter.vagrant') == true
+        lineCoverage = coverageObject.RSpec.coverage[editor.getPath().replace(atom.project.getPaths()[0],'/vagrant')]
+      else
+        lineCoverage = coverageObject.RSpec.coverage[editor.getPath()]
+
     catch error
       @simplecovHighlighterView.showNoCoverageData()
 
