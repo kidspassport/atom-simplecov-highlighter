@@ -16,7 +16,7 @@ module.exports = SimplecovHighlighter =
       type: 'boolean',
       title: 'Is on Vagrant?',
       description: 'Replaces json path with vagrant root'
-      default: true
+      default: false
     }
   },
 
@@ -86,7 +86,7 @@ module.exports = SimplecovHighlighter =
       if coverageObject.source_files != undefined
         codeClimateCov = {}
         for file in coverageObject.source_files
-          codeClimateCov['/vagrant/'+file.name] = JSON.parse(file.coverage)
+          codeClimateCov[file.name] = JSON.parse(file.coverage)
         coverageObject = {RSpec: {coverage: codeClimateCov}}
 
       if atom.config.get('sawyer-simplecov-highlighter.vagrant') == true
