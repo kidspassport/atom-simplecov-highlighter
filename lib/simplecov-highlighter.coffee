@@ -86,7 +86,7 @@ module.exports = SimplecovHighlighter =
       if coverageObject.source_files != undefined
         codeClimateCov = {}
         for file in coverageObject.source_files
-          codeClimateCov[file.name] = JSON.parse(file.coverage)
+          codeClimateCov[atom.project.getPaths()[0]+file.name] = JSON.parse(file.coverage)
         coverageObject = {RSpec: {coverage: codeClimateCov}}
 
       if atom.config.get('sawyer-simplecov-highlighter.vagrant') == true
